@@ -1,0 +1,218 @@
+Task Overview: Develop a RESTful API for an Institute Management System with
+Docker Support
+
+
+Project Structure:
+
+|-- src
+|   |-- main
+|       |-- java
+|           |-- com
+|               |-- yourcompany
+|                   |-- institute
+|                       |-- controller
+|                       |   |-- InstituteController.java
+|                       |-- model
+|                       |   |-- Institute.java
+|                       |-- repository
+|                       |   |-- InstituteRepository.java
+|                       |-- service
+|                           |-- InstituteService.java
+|                           |-- InstituteServiceImpl.java
+|-- src
+|   |-- main
+|       |-- resources
+|           |-- application.properties
+|-- src
+|   |-- test
+|       |-- java
+|           |-- com
+|               |-- yourcompany
+|                   |-- institute
+|                       |-- controller
+|                           |-- InstituteControllerTest.java
+|                       |-- service
+|                           |-- InstituteServiceTest.java
+|-- Dockerfile
+
+STEPS --
+
+Step 1: Model (Institute.java)
+
+// Institute.java
+
+package com.yourcompany.institute.model;
+
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+
+@Entity
+public class Institute {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    
+    private String name;
+    private String location;
+    private String contactInfo;
+    
+    // Getters and setters
+}
+
+Step 2: Repository (InstituteRepository.java)
+
+// InstituteRepository.java
+
+package com.yourcompany.institute.repository;
+
+import com.yourcompany.institute.model.Institute;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface InstituteRepository extends JpaRepository<Institute, Long> {
+}
+
+
+Step 3: Service (InstituteService.java and InstituteServiceImpl.java)
+
+// InstituteService.java
+
+package com.yourcompany.institute.service;
+
+import com.yourcompany.institute.model.Institute;
+
+public interface InstituteService {
+    Institute registerInstitute(Institute institute);
+    Institute updateInstitute(Long id, Institute updatedInstitute);
+    Institute getInstituteById(Long id);
+}
+// InstituteServiceImpl.java
+
+package com.yourcompany.institute.service;
+
+import com.yourcompany.institute.model.Institute;
+import com.yourcompany.institute.repository.InstituteRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+@Service
+public class InstituteServiceImpl implements InstituteService {
+
+    @Autowired
+    private InstituteRepository instituteRepository;
+
+    @Override
+    public Institute registerInstitute(Institute institute) {
+        return instituteRepository.save(institute);
+    }
+
+    @Override
+    public Institute updateInstitute(Long id, Institute updatedInstitute) {
+        Institute existingInstitute = instituteRepository.findById(id).orElse(null);
+        if (existingInstitute != null) {
+            // Update only non-null fields
+            if (updatedInstitute.getName() != null) {
+                existingInstitute.setName(updatedInstitute.getName());
+            }
+            if (updatedInstitute.getLocation() != null) {
+                existingInstitute.setLocation(updatedInstitute.getLocation());
+            }
+            if (updatedInstitute.getContactInfo() != null) {
+                existingInstitute.setContactInfo(updatedInstitute.getContactInfo());
+            }
+            return instituteRepository.save(existingInstitute);
+        }
+        return null;
+    }
+
+    @Override
+    public Institute getInstituteById(Long id) {
+        return instituteRepository.findById(id).orElse(null);
+    }
+}
+
+Step 4: Controller (InstituteController.java)
+
+// InstituteController.java
+
+package com.yourcompany.institute.controller;
+
+import com.yourcompany.institute.model.Institute;
+import com.yourcompany.institute.service.InstituteService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/institutes")
+public class InstituteController {
+
+    @Autowired
+    private InstituteService instituteService;
+
+    @PostMapping
+    public Institute registerInstitute(@RequestBody Institute institute) {
+        return instituteService.registerInstitute(institute);
+    }
+
+    @PutMapping("/{id}")
+    public Institute updateInstitute(@PathVariable Long id, @RequestBody Institute updatedInstitute) {
+        return instituteService.updateInstitute(id, updatedInstitute);
+    }
+
+    @GetMapping("/{id}")
+    public Institute getInstituteById(@PathVariable Long id) {
+        return instituteService.getInstituteById(id);
+    }
+}
+
+Step 5: Application Properties (application.properties)
+
+# application.properties
+
+spring.datasource.url=jdbc:h2:mem:testdb
+spring.datasource.driverClassName=org.h2.Driver
+spring.datasource.username=sa
+spring.datasource.password=password
+spring.jpa.database-platform=org.hibernate.dialect.H2Dialect
+
+
+Step 6: Dockerfile
+
+# Dockerfile
+
+FROM openjdk:11-jre-slim
+
+WORKDIR /app
+
+COPY target/institute-management-system.jar /app
+
+EXPOSE 8080
+
+CMD ["java", "-jar", "institute-management-system.jar"]
+
+
+Step 7: Building and Running with Docker
+
+1- Build the Spring Boot application:
+
+./mvnw clean package
+
+2- Build the Docker image:
+
+docker build -t institute-management-system .
+
+3- Run the Docker container:
+
+docker run -p 8080:8080 institute-management-system
+
+
+Now, your Institute Management System is accessible at http://localhost:8080/institutes.
+
+
+
+
+
+                                                                            THANK YOU
+
